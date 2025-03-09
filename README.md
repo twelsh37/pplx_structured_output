@@ -6,7 +6,6 @@ A Python project that interacts with the Perplexity AI API to generate articles,
 
 - Interacts with Perplexity AI API
 - Converts American English to UK English using NLTK
-- Limits content to 1000 words while preserving sentence boundaries
 - Extracts and formats citations as JSON
 - Outputs content in markdown format
 
@@ -43,7 +42,7 @@ The script will:
 
 1. Prompt for your question
 2. Send it to the Perplexity AI API
-3. Process the response (UK English conversion, word limiting)
+3. Process the response (UK English conversion)
 4. Save the formatted article to `article.md`
 
 ## Output Format
@@ -51,7 +50,7 @@ The script will:
 The generated `article.md` file will contain:
 
 - Title and description
-- Main content (limited to 1000 words)
+- Main content in UK English
 - Citations in JSON format
 
 Example:
@@ -71,8 +70,6 @@ Content in UK English...
 ```
 ````
 
-```
-
 ## Project Structure
 
 - `main.py`: Main script that handles user interaction and program flow
@@ -80,4 +77,7 @@ Content in UK English...
 - `api.py`: API interaction functions
 - `config.py`: Configuration management
 - `utils.py`: Utility functions for input/output and progress tracking
+
+```
+
 ```
