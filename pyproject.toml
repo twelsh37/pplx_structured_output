@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.12"
 litellm = "^1.61.20"
 openai = "^1.65.2"
+nltk = "^3.9.1"
 
 
 [build-system]
