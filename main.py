@@ -11,7 +11,7 @@ from typing import NoReturn
 
 from api import APIError, add_user_message, call_perplexity_api, messages
 from article import Article
-from config import config
+from config import get_config
 from utils import ProgressBar, get_multiline_input
 
 
@@ -34,6 +34,7 @@ def handle_error(error: Exception) -> NoReturn:
         print(f"\nAn unexpected error occurred: {str(error)}")
 
     # Print debug information for all errors
+    config = get_config()
     print("\nDebug information:")
     print(f"Model: {config.name}")
     print(f"API Base: {config.api_base}")
@@ -50,7 +51,7 @@ def main() -> None:
         user_question = get_multiline_input()
         add_user_message(user_question)
 
-        print("\nSending request to model...")
+        print("\nSending request to model\nAccessing deep research,\nThis could take a few minutes to complete...")
         progress = ProgressBar()
         progress.start()
 

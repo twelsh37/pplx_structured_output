@@ -14,8 +14,11 @@ from urllib3.util.retry import Retry
 
 from config import get_config
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging to be less intrusive
+logging.basicConfig(
+    level=logging.WARNING,  # Only show warnings and errors by default
+    format="%(levelname)s: %(message)s",  # Simpler format
+)
 logger = logging.getLogger(__name__)
 
 # Initialize conversation messages with system prompt
@@ -92,29 +95,50 @@ class PerplexityAPI:
         """
         max_retries = 3
         retry_count = 0
+        connect_timeout = 5
+        read_timeout = 180
 
         while retry_count < max_retries:
             try:
                 start_time = time.time()
+                logger.debug("Making API request...")  # Changed to debug level
                 response = self.session.post(
                     self.base_url,
                     headers=self.headers,
                     json=payload,
-                    timeout=(5, 30),  # (connect timeout, read timeout)
+                    timeout=(connect_timeout, read_timeout),
                 )
                 elapsed_time = time.time() - start_time
-                logger.info(f"API request completed in {elapsed_time:.2f} seconds")
+                logger.debug(
+                    f"API request completed in {elapsed_time:.2f} seconds"
+                )  # Changed to debug level
 
                 if response.status_code == 500 and retry_count < max_retries - 1:
                     retry_count += 1
-                    time.sleep(0.5 * (2**retry_count))  # Exponential backoff
+                    wait_time = 0.5 * (2**retry_count)
+                    logger.warning(
+                        f"Request failed, retrying in {wait_time:.1f} seconds..."
+                    )  # Keep as warning
+                    time.sleep(wait_time)  # Exponential backoff
                     continue
 
                 response.raise_for_status()
                 return response.json()
 
             except requests.exceptions.Timeout:
-                raise APIError("Request timed out. Please try again.")
+                if retry_count < max_retries - 1:
+                    retry_count += 1
+                    wait_time = 0.5 * (2**retry_count)
+                    logger.warning(
+                        f"Request timed out, retrying in {wait_time:.1f} seconds..."
+                    )  # Keep as warning
+                    time.sleep(wait_time)
+                    continue
+                raise APIError(
+                    "Request timed out after multiple attempts. "
+                    "The model might be taking longer than expected to process your query. "
+                    "Try breaking your question into smaller parts."
+                )
             except requests.exceptions.ConnectionError:
                 raise APIError(
                     "Could not connect to the API. Please check your internet connection."
@@ -130,13 +154,19 @@ class PerplexityAPI:
                         pass
                 if response.status_code == 500 and retry_count < max_retries - 1:
                     retry_count += 1
-                    time.sleep(0.5 * (2**retry_count))  # Exponential backoff
+                    wait_time = 0.5 * (2**retry_count)
+                    logger.warning(
+                        f"Request failed, retrying in {wait_time:.1f} seconds..."
+                    )  # Keep as warning
+                    time.sleep(wait_time)
                     continue
                 raise APIError(error_msg)
             except Exception as e:
                 raise APIError(f"Unexpected error: {str(e)}")
 
-        raise APIError("Maximum retries exceeded")
+        raise APIError(
+            "Maximum retries exceeded. The API might be experiencing issues."
+        )
 
     def get_completion(self, messages: List[Dict[str, str]]) -> Dict[str, Any]:
         """
